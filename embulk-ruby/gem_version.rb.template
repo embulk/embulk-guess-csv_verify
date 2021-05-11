@@ -1,3 +1,0 @@
-module Embulk
-  GEM_VERSION_EMBEDDED = "${ruby_version}"
-end
