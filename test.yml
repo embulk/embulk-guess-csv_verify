@@ -1,0 +1,6 @@
+exec:
+  exclude_guess_plugins: ['csv']
+  guess_plugins: ['csv_verify']
+in:
+  type: file
+  path_prefix: test.csv
