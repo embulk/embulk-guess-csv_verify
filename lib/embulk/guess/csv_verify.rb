@@ -23,8 +23,7 @@ module Embulk
 
       CLASSLOADER = create_classloader
       CONFIG_MAPPER_FACTORY_CLASS = CLASSLOADER.loadClass("org.embulk.util.config.ConfigMapperFactory").ruby_class
-      TYPE_MODULE_CLASS = CLASSLOADER.loadClass("org.embulk.util.config.modules.TypeModule").ruby_class
-      CONFIG_MAPPER_FACTORY = CONFIG_MAPPER_FACTORY_CLASS.builder.addDefaultModules.addModule(TYPE_MODULE_CLASS.new).build
+      CONFIG_MAPPER_FACTORY = CONFIG_MAPPER_FACTORY_CLASS.builder.addDefaultModules.build
       LEGACY_PLUGIN_TASK_CLASS = CLASSLOADER.loadClass("org.embulk.standards.CsvParserPlugin$PluginTask").ruby_class
       LIST_FILE_INPUT_CLASS = CLASSLOADER.loadClass("org.embulk.util.file.ListFileInput").ruby_class
       LINE_DECODER_CLASS = CLASSLOADER.loadClass("org.embulk.util.text.LineDecoder").ruby_class
