@@ -1,10 +1,6 @@
 plugins {
     id "java"
-    id "java-library"
-    id "maven-publish"
-    id "jacoco"
-    id "org.ajoberstar.grgit" version "4.0.1"
-    id "org.embulk.embulk-plugins" version "0.4.2" apply false
+    id "org.embulk.embulk-plugins" version "0.4.2"
 }
 
 repositories {
@@ -12,371 +8,42 @@ repositories {
 }
 
 group = "org.embulk"
-version = "0.10.31-SNAPSHOT"
-
-def subprojectNamesOfCoreArtifacts = [
-    "embulk-api",
-    "embulk-spi",
-    "embulk-core",
-    "embulk-deps",
-    "embulk-junit4",
-]
-
-def subprojectNamesOfStandardPlugins = [
-    "embulk-decoder-bzip2",
-    "embulk-decoder-gzip",
-    "embulk-encoder-bzip2",
-    "embulk-encoder-gzip",
-    "embulk-filter-remove_columns",
-    "embulk-filter-rename",
-    "embulk-formatter-csv",
-    "embulk-guess-bzip2",
-    "embulk-guess-csv",
-    "embulk-guess-csv_all_strings",
-    "embulk-guess-gzip",
-    "embulk-guess-json",
-    "embulk-input-config",
-    "embulk-input-file",
-    "embulk-output-file",
-    "embulk-output-null",
-    "embulk-output-stdout",
-    "embulk-parser-csv",
-    "embulk-parser-json",
-]
-
-configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name) }) {
-    apply plugin: "java"
-    apply plugin: "java-library"
-    apply plugin: 'checkstyle'
-    apply plugin: 'jacoco'
-    apply plugin: 'maven-publish'
-    apply plugin: "signing"
-
-    group = rootProject.group
-    version = rootProject.version
-
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-
-    tasks.withType(JavaCompile) {
-        options.encoding = "UTF-8"
-        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-    }
-
-    java {
-        withJavadocJar()
-        withSourcesJar()
-    }
-
-    javadoc {
-        options {
-            locale = 'en_US'
-            encoding = 'UTF-8'
-            if (project.name == "embulk-api" || project.name == "embulk-spi" ) {
-                overview = "src/main/html/overview.html"
-                links "https://docs.oracle.com/javase/8/docs/api/"
-                links "https://www.javadoc.io/doc/org.slf4j/slf4j-api/1.7.30/"
-            }
-        }
-    }
-
-    tasks.withType(Test) {
-        systemProperties System.properties.findAll { it.key.startsWith("org.embulk") }
-        testLogging {
-            outputs.upToDateWhen { false }
-            showStandardStreams = true
-        }
-    }
-
-    tasks.withType(Checkstyle) {
-        reports {
-            // Not to skip up-to-date checkstyles.
-            outputs.upToDateWhen { false }
-        }
-    }
-
-    checkstyle {
-        toolVersion '8.7'
-        configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
-        configProperties = [
-            'checkstyle.config.path': file("${projectDir}/config/checkstyle")
-        ]
-        ignoreFailures = false
-        maxWarnings = 0  // https://github.com/gradle/gradle/issues/881
-    }
-
-    jar {
-        from rootProject.file("LICENSE")
-        manifest {
-            attributes 'Implementation-Title': project.name,
-                       'Implementation-Version': project.version,
-                       'Implementation-Vendor-Id': project.group,
-                       'Specification-Title': project.name,
-                       'Specification-Version': project.version
-        }
-    }
-
-    sourcesJar {
-        from rootProject.file("LICENSE")
-    }
-
-    javadocJar {
-        from rootProject.file("LICENSE")
-    }
-
-    // embulk-core:tests need to be released because some plugins use embulk-core:tests for their testing.
-    // TODO: Merge them into embulk-junit4 in some manner.
-    if (project.name == "embulk-core") {
-        task testsJar(type: Jar, dependsOn: classes) {
-            classifier = 'tests'
-            from sourceSets.test.output
-            from rootProject.file("LICENSE")
-        }
-
-        artifacts {
-            archives testsJar
-        }
-    }
-
-    publishing {
-        publications {
-            maven(MavenPublication) {
-                groupId = "${project.group}"
-                artifactId = "${project.name}"
-
-                from components.java
-                // javadocJar and sourcesJar are added by java.withJavadocJar() and java.withSourcesJar() above.
-                // See: https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/JavaPluginExtension.html
-
-                // embulk-core:tests need to be released because some plugins use embulk-core:tests for their testing.
-                // TODO: Merge them into embulk-junit4 in some manner.
-                if (project.name == "embulk-core") {
-                    artifact testsJar
-                }
-
-                pom {  // https://central.sonatype.org/pages/requirements.html
-                    name = "${project.name}"
-                    afterEvaluate { project ->
-                        // "description" is declared in subproject's build.gradle. It needs to be configured after evaluation.
-                        description = "${project.description}"
-                    }
-                    url = "https://www.embulk.org/"
-
-                    licenses {
-                        license {
-                            // http://central.sonatype.org/pages/requirements.html#license-information
-                            name = "The Apache License, Version 2.0"
-                            url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            name = "Sadayuki Furuhashi"
-                            email = "frsyuki@gmail.com"
-                        }
-                        developer {
-                            name = "Muga Nishizawa"
-                            email = "muga.nishizawa@gmail.com"
-                        }
-                        developer {
-                            name = "Satoshi Akama"
-                            email = "satoshiakama@gmail.com"
-                        }
-                        developer {
-                            name = "Dai MIKURUBE"
-                            email = "dmikurube@treasure-data.com"
-                        }
-                        developer {
-                            name = "Shinichi Ishimura"
-                            email = "shiketaudonko41@gmail.com"
-                        }
-                        developer {
-                            name = "Roman Shtykh"
-                            email = "rshtykh@yahoo.com"
-                        }
-                    }
-
-                    scm {
-                        connection = "scm:git:git://github.com/embulk/embulk.git"
-                        developerConnection = "scm:git:git@github.com:embulk/embulk.git"
-                        url = "https://github.com/embulk/embulk"
-                    }
-                }
-            }
-        }
-
-        repositories {
-            maven {  // publishMavenPublicationToMavenCentralRepository
-                name = "mavenCentral"
-                if (project.version.endsWith("-SNAPSHOT")) {
-                    url "https://oss.sonatype.org/content/repositories/snapshots"
-                } else {
-                    url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                }
-                credentials {
-                    username = project.hasProperty("ossrhUsername") ? ossrhUsername : ""
-                    password = project.hasProperty("ossrhPassword") ? ossrhPassword : ""
-                }
-            }
-        }
-    }
-
-    signing {
-        sign publishing.publications.maven
-    }
-}
-
-configurations {
-    embed
-}
+version = "0.10.32-SNAPSHOT"
+description = "Verification-purpose Embulk CSV guess plugin to compare the old Ruby-based one and the new Java-based one (not for your production use; note that 'decoders' and 'parser' sections in your configuration can be logged even if they contain confidential information)"
 
 dependencies {
-    implementation project(':embulk-core')
+    compileOnly "org.embulk:embulk-api:0.10.31"
+    compileOnly "org.embulk:embulk-spi:0.10.31"
 
-    subprojectNamesOfStandardPlugins.each { pluginName ->
-        embed(project(":${pluginName}"))
-    }
+    compileOnly "org.embulk:embulk-core:0.10.31"
 
-    // Logback and jansi are included only in the executable package. (jansi for logback colors to work on Windows.)
-    implementation "ch.qos.logback:logback-classic:1.2.3"
-    implementation "org.fusesource.jansi:jansi:1.18"
+    compile "org.embulk:embulk-guess-csv:0.10.31"
+    compile "org.embulk:embulk-util-config:0.3.0"
+    compile "com.google.guava:guava:18.0"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7"
+}
 
-    embed(project(':embulk-deps')) {
-        exclude group: 'org.apache.commons', module: 'commons-lang3'  // Included in embulk-core.
-        exclude group: 'com.google.guava', module: 'guava'  // Included in embulk-core.
+embulkPlugin {
+    mainClass = "org.embulk.guess.csv.CsvGuessPlugin"
+    category = "guess"
+    type = "csv_verify"
+}
+
+gem {
+    from "LICENSE"
+
+    authors = [ "Sadayuki Furuhashi", "Muga Nishizawa", "Dai MIKURUBE" ]
+    email = [ "dmikurube@treasure-data.com" ]
+    summary = "Verification-purpose Embulk CSV guess plugin (not for your production use)"
+    homepage = "https://github.com/embulk/embulk-guess-csv_verify"
+    licenses = [ "Apache-2.0" ]
+
+    generateRubyCode = false  // Not to generate lib/embulk/guess/csv_verify.rb
+    into("lib/embulk/guess/") {
+        from "lib/embulk/guess/csv_verify.rb"
     }
 }
 
-def listEmbedDependencies = { rootModuleName, prefix ->
-    def firstArtifact = []  // The artifact of rootModuleName -- the list should contain only one.
-    def followingArtifacts = []  // Artifacts depended from the artifact of rootModuleName.
-
-    configurations.embed.resolvedConfiguration.firstLevelModuleDependencies.each { firstLevelDependency ->
-        if (firstLevelDependency.moduleName == rootModuleName) {
-            firstLevelDependency.allModuleArtifacts.each { requiredArtifact ->
-                if (requiredArtifact.name == rootModuleName) {
-                    firstArtifact.add(prefix + requiredArtifact.file.name)
-                } else {
-                    followingArtifacts.add(prefix + requiredArtifact.file.name)
-                }
-            }
-        }
-    }
-
-    if (firstArtifact.isEmpty()) {
-        if (followingArtifacts.isEmpty()) {
-            throw new GradleException('Failed to collect libraries to embed: no dependencies found')
-        } else {
-            throw new GradleException('Failed to collect libraries to embed: specified root module is not found')
-        }
-    } else if (firstArtifact.size() > 1) {
-        throw new GradleException('Failed to collect libraries to embed: multiple root modules are found')
-    }
-
-    // It guarantees that the artifact of rootModuleName comes first.
-    return String.join(' ', firstArtifact + followingArtifacts)
-}
-
-// Standard "jar" task to build a JAR with dependency JAR resources embedded.
-jar {
-    dependsOn ":embulk-api:jar",
-              ":embulk-spi:jar",
-              ":embulk-core:jar",
-              ":embulk-deps:jar"
-
-    subprojectNamesOfStandardPlugins.each { pluginName ->
-        dependsOn ":${pluginName}:jar"
-    }
-
-    // Expands all dependencies including "embulk-core"
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-
-    // Includes COPYING.
-    from "${rootProject.projectDir}/COPYING"
-
-    // Includes all hidden dependency librarires under "embed" into "lib/".
-    into('/lib') {
-        from configurations.embed
-    }
-
-    // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
-    // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
-    manifest {
-        attributes 'Implementation-Title': 'embulk',
-                   'Implementation-Version': project.version,
-                   'Implementation-Vendor-Id': project.group,
-                   'Specification-Title': 'embulk',
-                   'Specification-Version': project.version,
-                   'Embulk-Resource-Class-Path': listEmbedDependencies('embulk-deps', '/lib/'),
-                   "Main-Class": "org.embulk.cli.Main",
-                   "Embulk-Plugins": String.join(" ", subprojectNamesOfStandardPlugins),
-
-                   // "json" should be registered before "csv".
-                   // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
-                   "Embulk-Default-Guess-Plugins": "gzip,bzip2,json,csv"
-
-        def pluginAttributes = subprojectNamesOfStandardPlugins.collectEntries { pluginName ->
-            [ ("Embulk-Plugin-${pluginName}".toString()): listEmbedDependencies(pluginName, "/lib/") ]
-        }
-        attributes(pluginAttributes)
-    }
-}
-
-task executableJar(dependsOn: "jar") {
-    ext.destinationDir = file("${buildDir}/executable")
-    doFirst {
-        destinationDir.mkdirs()
-    }
-    ext.destination = file("${destinationDir}/embulk-${project.version}.jar")
-    doLast {
-        destination.write("")
-        destination.append("\n: <<END_OF_EMBULK_SELFRUN_BATCH_PART\r\n")
-        destination.append(file("embulk-core/src/main/bat/selfrun.bat").readBytes())
-        destination.append("\r\nEND_OF_EMBULK_SELFRUN_BATCH_PART\r\n\n")
-        destination.append(file("embulk-core/src/main/sh/selfrun.sh").readBytes())
-        destination.append(jar.outputs.files.singleFile.readBytes())
-        destination.setExecutable(true)
-    }
-}
-
-task releaseCheck {
-    doFirst {
-        if (rootProject.version.endsWith("-SNAPSHOT")) {
-            throw new GradleException("Not for release. The version in build.gradle is SNAPSHOT: ${rootProject.version}")
-        }
-        def grgit = org.ajoberstar.grgit.Grgit.open(dir: "${rootProject.projectDir}")
-        if (!grgit.status().clean) {
-            throw new GradleException("Not for release. The working tree is dirty.")
-        }
-        def described = grgit.describe(commit: "HEAD").toString().trim()
-        if (described != "v${rootProject.version}") {
-            throw new GradleException("Not for release. git-describe returned a name different from the version in build.gradle: ${described} v.s. v${rootProject.version}")
-        }
-        if (described.contains("-")) {
-            // HEAD may not be tagged with annotation properly.
-            throw new GradleException("Not for release. git-describe returned a name with a hyphen: ${described}")
-        }
-        // TODO: Revisit if we would check the format of tag annotation.
-    }
-    doLast {
-        println "Ready. Run 'release' task."
-    }
-}
-
-task release {
-    dependsOn "releaseCheck"
-    dependsOn "executableJar"
-    subprojectNamesOfCoreArtifacts.each { subprojectName ->
-        dependsOn ":${subprojectName}:publishMavenPublicationToMavenCentralRepository"
-        tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
-    }
-    subprojectNamesOfStandardPlugins.each { subprojectName ->
-        dependsOn ":${subprojectName}:publishMavenPublicationToMavenCentralRepository"
-        tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
-    }
-    dependsOn "embulk-ruby:gemPush"
-    dependsOn "embulk-guess-csv_verify:gemPush"
+gemPush {
+    host = "https://rubygems.org"
 }
