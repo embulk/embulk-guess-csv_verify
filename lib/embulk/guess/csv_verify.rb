@@ -25,13 +25,13 @@ module Embulk
       CONFIG_MAPPER_FACTORY_CLASS = CLASSLOADER.loadClass("org.embulk.util.config.ConfigMapperFactory").ruby_class
       TYPE_MODULE_CLASS = CLASSLOADER.loadClass("org.embulk.util.config.modules.TypeModule").ruby_class
       CONFIG_MAPPER_FACTORY = CONFIG_MAPPER_FACTORY_CLASS.builder.addDefaultModules.addModule(TYPE_MODULE_CLASS.new).build
-      LEGACY_PLUGIN_TASK_CLASS = CLASSLOADER.loadClass("org.embulk.standards.CsvParserPlugin$PluginTask")
+      LEGACY_PLUGIN_TASK_CLASS = CLASSLOADER.loadClass("org.embulk.standards.CsvParserPlugin$PluginTask").ruby_class
       LIST_FILE_INPUT_CLASS = CLASSLOADER.loadClass("org.embulk.util.file.ListFileInput").ruby_class
       LINE_DECODER_CLASS = CLASSLOADER.loadClass("org.embulk.util.text.LineDecoder").ruby_class
       CSV_GUESS_PLUGIN_CLASS = CLASSLOADER.loadClass("org.embulk.guess.csv.CsvGuessPlugin").ruby_class
       LEGACY_CSV_TOKENIZER_CLASS = CLASSLOADER.loadClass("org.embulk.standards.CsvTokenizer").ruby_class
-      LEGACY_TOO_FEW_COLUMNS_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer$TooFewColumnsException").ruby_class
-      LEGACY_INVALID_VALUE_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer$InvalidValueException").ruby_class
+      LEGACY_TOO_FEW_COLUMNS_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.standards.CsvTokenizer$TooFewColumnsException").ruby_class
+      LEGACY_INVALID_VALUE_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.standards.CsvTokenizer$InvalidValueException").ruby_class
 
       DELIMITER_CANDIDATES = [
         ",", "\t", "|", ";"
