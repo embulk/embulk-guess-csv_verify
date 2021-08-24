@@ -16,5 +16,6 @@ in:
     allow_extra_columns: false
     allow_optional_columns: false
     columns:
+    - {name: v_long_max, type: long}
     - {name: foo, type: string}
     - {name: '', type: long}

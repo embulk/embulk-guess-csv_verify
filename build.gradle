@@ -8,17 +8,17 @@ repositories {
 }
 
 group = "org.embulk"
-version = "0.10.32-SNAPSHOT"
+version = "0.10.33-SNAPSHOT"
 description = "Verification-purpose Embulk CSV guess plugin to compare the old Ruby-based one and the new Java-based one (not for your production use; note that 'decoders' and 'parser' sections in your configuration can be logged even if they contain confidential information)"
 
 dependencies {
-    compileOnly "org.embulk:embulk-api:0.10.31"
-    compileOnly "org.embulk:embulk-spi:0.10.31"
+    compileOnly "org.embulk:embulk-api:0.10.33"
+    compileOnly "org.embulk:embulk-spi:0.10.33"
 
-    compileOnly "org.embulk:embulk-core:0.10.31"
+    compileOnly "org.embulk:embulk-core:0.10.33"
 
-    compile "org.embulk:embulk-guess-csv:0.10.31"
-    compile "org.embulk:embulk-util-config:0.3.0"
+    compile "org.embulk:embulk-guess-csv:0.10.33"
+    compile "org.embulk:embulk-util-config:0.3.1"
     compile "com.google.guava:guava:18.0"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7"
 }
