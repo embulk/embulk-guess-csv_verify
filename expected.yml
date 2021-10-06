@@ -17,5 +17,6 @@ in:
     allow_optional_columns: false
     columns:
     - {name: v_long_max, type: long}
+    - {name: time, type: timestamp, format: '%Y-%m-%d %k:%M:%S'}
     - {name: foo, type: string}
     - {name: '', type: long}
