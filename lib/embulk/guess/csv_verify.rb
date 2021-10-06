@@ -64,7 +64,7 @@ module Embulk
 
         begin
           guess_plugin_java = CSV_GUESS_PLUGIN_CLASS.new
-          guessed_java = guess_plugin_java.guess_lines(config_to_java(config), config_to_java(sample_lines))
+          guessed_java = guess_plugin_java.guess_lines(config_to_java(config), config_to_java(sample_lines), Java::org.embulk.spi.Exec.getBufferAllocator)
           if guessed_java.nil?
             raise "embulk-guess-csv (Java) returned null."
           end
@@ -76,7 +76,7 @@ module Embulk
           end
         rescue Exception => e
           # Any error from the Java-based guess plugin should pass-through just with logging.
-          Embulk.logger.error "[Embulk CSV guess verify] #{e.inspect}"
+          Embulk.logger.error "[Embulk CSV guess verify] #{e.inspect}\n\t#{e.backtrace.join("\n\t")}"
         end
 
         # This plugin returns a result from the Ruby-based implementation.
